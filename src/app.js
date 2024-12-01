@@ -111,6 +111,27 @@ const getTotalFromSizes = (prices, sizes) => {
     return [Math.floor(total / Object.keys(sizes).length), link]
 }
 
+const getDataSizeForDisplay = () => {
+    const currentSizes = gv(CHECKBOX_LABELS.subscription_size)
+    const currentSizesIsArray = getType(currentSizes) === "array"
+    const sizes = currentSizesIsArray ? JSON.parse(currentSizes) : [currentSizes]
+    const formattedSizes = sizes.map((size) => {
+        const [key, value] = size.split(":")
+        return value
+    })
+
+    if (formattedSizes.length === 1) return formattedSizes[0] + " GB"
+
+    // get the lowest and highest values (num-num)
+    const unifiedArr = formattedSizes.map((item) => {
+        return item.split("-")
+    })
+    const unifiedArrFlat = unifiedArr.flat()
+    const min = Math.min(...unifiedArrFlat)
+    const max = Math.max(...unifiedArrFlat)
+    return min + "-" + max + " GB"
+}
+
 const getType = (val) => {
     try {
         const parsedValue = JSON.parse(val)
@@ -189,7 +210,7 @@ const show_filtered_and_sorted_operators = (operatorPrices) => {
         $offer_card.find(".price_text-total").text(item.total + " nok")
         $offer_card.find(".continue_button").attr("href", item.link)
         $offer_card.find(".average-price_text").text(Math.round(item.total) + " nok per måned")
-        $offer_card.find(".data-size_text").text("0000 - test" + " GB")
+        $offer_card.find(".data-size_text").text(getDataSizeForDisplay())
 
         // update rating number
         const rating = 5 - i < 2 ? 2 : 5 - i
@@ -519,6 +540,7 @@ $(function () {
 
             const userType = gv(SUBSCRIBER_TYPE_KEY)
             const rawPricesPerOperator = $(`[data-type='${SUBSCRIBER_TYPE[userType]}']`)
+            if (!rawPricesPerOperator.length) throw new Error("No prices found for the selected user type, check data-type attribute & printed data from webflow in page 2")
             const sizes = getFormattedSizes(JSON.parse(gv(CHECKBOX_LABELS.subscription_size)))
 
             rawPricesPerOperator.each(function (index, el) {
@@ -544,13 +566,13 @@ $(function () {
             setTimeout(() => {
                 window.location.href = link
             }, 3000)
-        } else window.location.href = link
+        }
 
         // --------------------------------- for lead form submission
         if ($el.hasClass("final-submit")) {
             $el.text(LOADING_TEXT)
             submitLeadForm()
-        }
+        } else window.location.href = link
     })
 
     // ========================================== END Continue button click
@@ -770,10 +792,30 @@ $(function () {
                 const arr = getType(values[key]) === "array" ? JSON.parse(values[key]) : [values[key]]
                 const forMattedArr = arr.map((val) => (val?.includes(":") ? val.split(":")[1] + " GB" : val))
                 $form.append(`<input type="hidden" name="${key}" data-name="${key}" value="${forMattedArr.join(",")}">`)
-            } else $form.append(`<input type="hidden" name="${key}" data-name="${key}" value="${values[key]}">`)
+            } else $form.append(`<input type="hidden" name="${key}" data-name="${key}" value="${key === OPERATOR_PRICES_WITH_PREFERENCES_POINTS ? "-" : values[key]}">`)
         })
 
         // submit the form
-        $form.submit()
+        $form.trigger("submit")
+    }
+})
+
+$(document).ajaxComplete(function (event, xhr, settings) {
+    if (settings.url.includes("https://webflow.com/api/v1/form/") || settings.url.includes("https://webflow.com/api/v2/form/")) {
+        const isSuccessful = xhr.status === 200
+        const redirectFormName = "redirect-form-hehexd"
+        const isRedirectForm = settings.data.includes(redirectFormName)
+        console.log(isSuccessful)
+        console.log(isRedirectForm)
+        if (isRedirectForm && isSuccessful) {
+            window.location.reload()
+        } else if (!isRedirectForm) {
+            if (isSuccessful) {
+                window.location.reload()
+            } else {
+                console.error("Form submission failed")
+                $(".button.final-submit").text("Submit")
+            }
+        }
     }
 })
