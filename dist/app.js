@@ -579,7 +579,7 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
 }
 
 },{}],"hXVIw":[function(require,module,exports) {
-console.log("Scripts LOADER ______ LOCALHOST: 2.1");
+console.log("Scripts LOADER ______ LOCALHOST: 2.22");
 const CHECKBOX_LABELS = {
     "subscription-important_features": "What is most important to you in a mobile subscription?",
     subscription_size: "Size-of-the-subscription"
@@ -596,14 +596,7 @@ const LAST_NAME = "Last-name";
 const EMAIL = "Email";
 const PHONE_NUMBER = "Phone-number";
 const OPERATOR_PRICES = "operatorPrices";
-const IGNORED_KEYS_ON_RESET = [
-    FIRST_NAME,
-    LAST_NAME,
-    EMAIL,
-    PHONE_NUMBER,
-    OPERATOR_PRICES,
-    "subscription-important_features"
-];
+// const IGNORED_KEYS_ON_RESET = [FIRST_NAME, LAST_NAME, EMAIL, PHONE_NUMBER, OPERATOR_PRICES, "subscription-important_features"];
 const SEND_OFFERS_TO_MY_EMAIL = "Send offers to my email";
 const CONTACT_BY_AN_ADVISER = "Contact by an adviser";
 const LOADING_TEXT = "Laster inn ...";
@@ -617,13 +610,13 @@ const FILTER_VALUES = {
 const sv = (key, val)=>sessionStorage.setItem(key, val);
 const gv = (key)=>sessionStorage.getItem(key);
 const rmv = (key)=>sessionStorage.removeItem(key);
-const resetDb = ()=>{
-    // remove all session storage values, except for names, email, phone
-    Object.keys(sessionStorage).map((key)=>{
-        if (IGNORED_KEYS_ON_RESET.includes(key)) return;
-        rmv(key);
-    });
-};
+// const resetDb = () => {
+//   // remove all session storage values, except for names, email, phone
+//   Object.keys(sessionStorage).map((key) => {
+//     if (IGNORED_KEYS_ON_RESET.includes(key)) return;
+//     rmv(key);
+//   });
+// };
 function flattenAndFindMax(arr) {
     // Flatten the array
     const flatArray = arr.flat(Infinity);
@@ -808,6 +801,20 @@ $(function() {
     let currentStep = 1;
     const step1OptionalFields = $("[step-1-optional-field]");
     const optionalInputs = $(".optional-field input");
+    /**
+     * -------------------------------------------------------------
+     * Show fullscreen loader
+     */ function showFullScreenLoader() {
+        const $loader = $(".loading_screen");
+        if (!$loader.length) {
+            console.warn("Loader not found");
+            return;
+        }
+        $loader.show(100);
+        $loader.find(".loading-bar_line").animate({
+            width: "100%"
+        }, 2900);
+    }
     // if first page, reset session storage, hide operator selection until prev question is answered
     if ($body.hasClass("body-calc-step1")) {
         currentStep = 1;
@@ -835,15 +842,15 @@ $(function() {
             // $("[individual-sizes]").detach();
             // $("[data-default]").removeClass("hidden");
             /**
-       * Step 2 dynamic functions
-       * attach event handlers
-       */ const sizeFieldsWrap = $(".size-fields-wrapper");
+             * Step 2 dynamic functions
+             * attach event handlers
+             */ const sizeFieldsWrap = $(".size-fields-wrapper");
             const defaultSizeField = $(".form-field-container[individual-sizes]");
             let cloneCount = 1;
             /**
-       * -------------------------------------------------------------
-       * sizes field add or remove
-       */ // handle add new size field
+             * -------------------------------------------------------------
+             * sizes field add or remove
+             */ // handle add new size field
             $(".add-more-size_btn").on("click", function() {
                 // clone element
                 const $clone = defaultSizeField.clone();
@@ -883,7 +890,8 @@ $(function() {
                 const parentElPosition = parentEl.index();
                 // const $inputs = $el.closest(".details_title-wrap").siblings(".form-block").find("input");
                 const label = CHECKBOX_LABELS.subscription_size;
-                const oldValues = JSON.parse(gv(label)); // this is always and array, since delete button only available for multiple sizes
+                const oldValues = JSON.parse(gv(label)) // this is always and array, since delete button only available for multiple sizes
+                ;
                 const newValues = oldValues.filter((_, i)=>i !== parentElPosition);
                 saveInputValue(label, JSON.stringify(newValues));
                 // remove element
@@ -896,9 +904,9 @@ $(function() {
             });
             // ========================================== END STEP 2
             /**
-       * generate missing rows
-       * (applicable for family only & when values are present in session storage)
-       */ // extract everything before : and get unique values
+             * generate missing rows
+             * (applicable for family only & when values are present in session storage)
+             */ // extract everything before : and get unique values
             const selectedSizes = currentSizesIsArray ? JSON.parse(currentSizes) : [
                 currentSizes
             ];
@@ -912,16 +920,17 @@ $(function() {
         getOldValuesAndUpdateUI();
     }
     // if third page
-    if ($body.hasClass("body-calc-step3")) {
-        currentStep = 3;
-        // check for session storage values and update ui
-        getOldValuesAndUpdateUI();
-    }
+    // if ($body.hasClass("body-calc-step3")) {
+    //   currentStep = 3;
+    //   // check for session storage values and update ui
+    //   getOldValuesAndUpdateUI();
+    // }
     // if last page, show offers and filter buttons
     if ($body.hasClass("body-calc-step4")) {
         currentStep = 4;
         const operatorPrices = JSON.parse(gv("operatorPrices"));
-        const preferences = JSON.parse(gv(CHECKBOX_LABELS["subscription-important_features"])).filter(Boolean); // the filter is to remove falsy values
+        const preferences = JSON.parse(gv(CHECKBOX_LABELS["subscription-important_features"])).filter(Boolean) // the filter is to remove falsy values
+        ;
         // prepare preferences points filter and data
         merge_preferences_points_with_operator_prices(operatorPrices, preferences);
         // on page load, update order and rating
@@ -946,11 +955,11 @@ $(function() {
         });
     }
     /**
-   * -------------------------------------------------------------
-   * Required field validation
-   * on ".continue_button" link click, check if all required fields are filled
-   * if not, then show error message, else continue to next page load
-   */ $(".continue_button").on("click", function(e) {
+     * -------------------------------------------------------------
+     * Required field validation
+     * on ".continue_button" link click, check if all required fields are filled
+     * if not, then show error message, else continue to next page load
+     */ $(".continue_button, .button.final-submit").on("click", function(e) {
         e.preventDefault();
         let errors = false;
         const $el = $(this);
@@ -1012,9 +1021,11 @@ $(function() {
             }
         }
         if (errors) return;
-        // --------------------------------- for lead form submission
-        if ($el.attr("id") === LEAD_FORM_SUBMIT_BUTTON_ID) {
-            // --------------------------------- calculate price offer for each operator
+        // --------------------------------- prices calculation
+        if ($el.attr("id") === "calculate-prices") {
+            // show full screen loader
+            showFullScreenLoader();
+            // calculate price offer for each operator
             const operatorPrices = [];
             const userType = gv(SUBSCRIBER_TYPE_KEY);
             const rawPricesPerOperator = $(`[data-type='${SUBSCRIBER_TYPE[userType]}']`);
@@ -1036,13 +1047,16 @@ $(function() {
             operatorPrices.sort((a, b)=>a.total - b.total);
             // save to session storage
             sv("operatorPrices", JSON.stringify(operatorPrices));
-            // submit lead form
-            submitLeadForm();
             // navigate to next page
             setTimeout(()=>{
                 window.location.href = link;
             }, 3000);
         } else window.location.href = link;
+        // --------------------------------- for lead form submission
+        if ($el.hasClass("final-submit")) {
+            $el.text(LOADING_TEXT);
+            submitLeadForm();
+        }
     });
     // ========================================== END Continue button click
     function saveInputValue(name, val) {
@@ -1182,13 +1196,35 @@ $(function() {
         saveInputValue($(this).attr("name"), $(this).val());
     });
     /**
-   * -------------------------------------------------------------
-   * Step 1 dynamic functions
-   */ $(".operator_company").on("click", handleRadioButtonClick);
+     * -------------------------------------------------------------
+     * Step 1 dynamic functions
+     */ $(".operator_company").on("click", handleRadioButtonClick);
     /**
-   * -------------------------------------------------------------
-   * handle final form submission
-   */ function submitLeadForm() {
+     * -------------------------------------------------------------
+     * on click buttons show hide form and
+     * append hidden input field to form
+     */ $(".offer_button-wrapper button").on("click", function(e) {
+        e.preventDefault();
+        // update ui state
+        $(".offer_button-wrapper button").removeClass("is-active").delay(100);
+        $(this).addClass("is-active");
+        // Show the Lead form (multiple forms but sent as one)
+        $(".service-form.final-form").show(100);
+        const $form = $("#lead-form");
+        // get the value of pressed button
+        const value = $(this).attr("value");
+        if (value === "Send offers to my email") {
+            $form.append(`<input type="hidden" name="${SEND_OFFERS_TO_MY_EMAIL}" data-name="${SEND_OFFERS_TO_MY_EMAIL}" value="true">`);
+            $form.find(`input[name='${CONTACT_BY_AN_ADVISER}']`).remove();
+        } else {
+            $form.append(`<input type="hidden" name="${CONTACT_BY_AN_ADVISER}" data-name="${CONTACT_BY_AN_ADVISER}" value="true">`);
+            $form.find(`input[name='${SEND_OFFERS_TO_MY_EMAIL}']`).remove();
+        }
+    });
+    /**
+     * -------------------------------------------------------------
+     * handle lead form submission
+     */ function submitLeadForm() {
         const $form = $("#lead-form");
         const excludedFields = [
             "operatorPrices",
@@ -1205,31 +1241,9 @@ $(function() {
                 $form.append(`<input type="hidden" name="${key}" data-name="${key}" value="${forMattedArr.join(",")}">`);
             } else $form.append(`<input type="hidden" name="${key}" data-name="${key}" value="${values[key]}">`);
         });
-        // $(".loading_screen").removeClass("hide");
-        $(".loading_screen").show(100);
-        $(".loading-bar_line").animate({
-            width: "100%"
-        }, 2900);
+        // submit the form
         $form.submit();
-    //resetDb();
     }
-    $(".offer_button-wrapper button").on("click", function(e) {
-        e.preventDefault();
-        const value = $(this).attr("value");
-        $(this).text(LOADING_TEXT);
-        // set values to hidden fields
-        const $form = $(".bidder_calc_form");
-        const name = gv(FIRST_NAME) + " " + gv(LAST_NAME);
-        const email = gv(EMAIL);
-        const phone = gv(PHONE_NUMBER);
-        $form.append(`<input type="hidden" name="Name" data-name="Name" value="${name}">`);
-        $form.append(`<input type="hidden" name="Email" data-name="Email" value="${email}">`);
-        $form.append(`<input type="hidden" name="Phone" data-name="Phone" value="${phone}">`);
-        if (value === "Send offers to my email") $form.append(`<input type="hidden" name="${SEND_OFFERS_TO_MY_EMAIL}" data-name="${SEND_OFFERS_TO_MY_EMAIL}" value="true">`);
-        else $form.append(`<input type="hidden" name="${CONTACT_BY_AN_ADVISER}" data-name="${CONTACT_BY_AN_ADVISER}" value="true">`);
-        // submit form
-        $form.trigger("submit");
-    });
 });
 
 },{}]},["d4IjG","hXVIw"], "hXVIw", "parcelRequire3bc0")

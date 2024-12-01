@@ -1,4 +1,4 @@
-console.log("Scripts LOADER ______ LOCALHOST: 2.1")
+console.log("Scripts LOADER ______ LOCALHOST: 2.22")
 
 const CHECKBOX_LABELS = {
     "subscription-important_features": "What is most important to you in a mobile subscription?",
@@ -254,6 +254,27 @@ $(function () {
     const step1OptionalFields = $("[step-1-optional-field]")
     const optionalInputs = $(".optional-field input")
 
+    /**
+     * -------------------------------------------------------------
+     * Show fullscreen loader
+     */
+    function showFullScreenLoader() {
+        const $loader = $(".loading_screen")
+
+        if (!$loader.length) {
+            console.warn("Loader not found")
+            return
+        }
+
+        $loader.show(100)
+        $loader.find(".loading-bar_line").animate(
+            {
+                width: "100%",
+            },
+            2900,
+        )
+    }
+
     // if first page, reset session storage, hide operator selection until prev question is answered
     if ($body.hasClass("body-calc-step1")) {
         currentStep = 1
@@ -418,7 +439,7 @@ $(function () {
      * on ".continue_button" link click, check if all required fields are filled
      * if not, then show error message, else continue to next page load
      */
-    $(".continue_button").on("click", function (e) {
+    $(".continue_button, .button.final-submit").on("click", function (e) {
         e.preventDefault()
         let errors = false
         const $el = $(this)
@@ -488,8 +509,11 @@ $(function () {
 
         if (errors) return
 
-        // --------------------------------- for lead form submission
+        // --------------------------------- prices calculation
         if ($el.attr("id") === "calculate-prices") {
+            // show full screen loader
+            showFullScreenLoader()
+
             // calculate price offer for each operator
             const operatorPrices = []
 
@@ -521,6 +545,12 @@ $(function () {
                 window.location.href = link
             }, 3000)
         } else window.location.href = link
+
+        // --------------------------------- for lead form submission
+        if ($el.hasClass("final-submit")) {
+            $el.text(LOADING_TEXT)
+            submitLeadForm()
+        }
     })
 
     // ========================================== END Continue button click
@@ -699,75 +729,37 @@ $(function () {
 
     /**
      * -------------------------------------------------------------
-     * Show fullscreen loader
+     * on click buttons show hide form and
+     * append hidden input field to form
      */
-    function showFullScreenLoader() {
-        const $loader = $(".loading_screen")
+    $(".offer_button-wrapper button").on("click", function (e) {
+        e.preventDefault()
 
-        if (!$loader.length) {
-            console.warn("Loader not found")
-            return
+        // update ui state
+        $(".offer_button-wrapper button").removeClass("is-active").delay(100)
+        $(this).addClass("is-active")
+
+        // Show the Lead form (multiple forms but sent as one)
+        $(".service-form.final-form").show(100)
+        const $form = $("#lead-form")
+
+        // get the value of pressed button
+        const value = $(this).attr("value")
+
+        if (value === "Send offers to my email") {
+            $form.append(`<input type="hidden" name="${SEND_OFFERS_TO_MY_EMAIL}" data-name="${SEND_OFFERS_TO_MY_EMAIL}" value="true">`)
+            $form.find(`input[name='${CONTACT_BY_AN_ADVISER}']`).remove()
+        } else {
+            $form.append(`<input type="hidden" name="${CONTACT_BY_AN_ADVISER}" data-name="${CONTACT_BY_AN_ADVISER}" value="true">`)
+            $form.find(`input[name='${SEND_OFFERS_TO_MY_EMAIL}']`).remove()
         }
-
-        $loader.show(100)
-        $loader.find(".loading-bar_line").animate(
-            {
-                width: "100%",
-            },
-            2900,
-        )
-    }
+    })
 
     /**
      * -------------------------------------------------------------
      * handle lead form submission
      */
     function submitLeadForm() {
-        // const $form = $("#lead-form")
-        // const excludedFields = ["operatorPrices", NO_LABEL_FOUND]
-        // const values = sessionStorage
-        //
-        // Object.keys(values).map((key) => {
-        //     if (excludedFields.includes(key)) return
-        //     if (Object.values(CHECKBOX_LABELS).includes(key)) {
-        //         const arr = getType(values[key]) === "array" ? JSON.parse(values[key]) : [values[key]]
-        //         const forMattedArr = arr.map((val) => (val?.includes(":") ? val.split(":")[1] + " GB" : val))
-        //         $form.append(`<input type="hidden" name="${key}" data-name="${key}" value="${forMattedArr.join(",")}">`)
-        //     } else $form.append(`<input type="hidden" name="${key}" data-name="${key}" value="${values[key]}">`)
-        // })
-        //
-        // // show full screen loader
-        // showFullScreenLoader()
-        //
-        // $form.submit()
-    }
-
-    /**
-     * -------------------------------------------------------------
-     * contact request form submission
-     * on click of contact request button, submit form, and show loading screen
-     * Also append contact details to form data
-     */
-    $(".offer_button-wrapper button").on("click", function (e) {
-        e.preventDefault()
-
-        // Show the Lead form (multiple forms but sent as one)
-        $(".service-form.final-form").show(100)
-
-        // get the value of pressed button
-        const value = $(this).attr("value")
-
-        // $(this).text(LOADING_TEXT);
-        // set values to hidden fields
-        // const $form = $(".bidder_calc_form");
-        // const name = gv(FIRST_NAME) + " " + gv(LAST_NAME);
-        // const email = gv(EMAIL);
-        // const phone = gv(PHONE_NUMBER);
-        //
-        // $form.append(`<input type="hidden" name="Name" data-name="Name" value="${name}">`);
-        // $form.append(`<input type="hidden" name="Email" data-name="Email" value="${email}">`);
-        // $form.append(`<input type="hidden" name="Phone" data-name="Phone" value="${phone}">`);
-
         const $form = $("#lead-form")
         const excludedFields = ["operatorPrices", NO_LABEL_FOUND]
         const values = sessionStorage
@@ -781,18 +773,7 @@ $(function () {
             } else $form.append(`<input type="hidden" name="${key}" data-name="${key}" value="${values[key]}">`)
         })
 
-        // show full screen loader
-        showFullScreenLoader()
-
+        // submit the form
         $form.submit()
-
-        if (value === "Send offers to my email") {
-            $form.append(`<input type="hidden" name="${SEND_OFFERS_TO_MY_EMAIL}" data-name="${SEND_OFFERS_TO_MY_EMAIL}" value="true">`)
-        } else {
-            $form.append(`<input type="hidden" name="${CONTACT_BY_AN_ADVISER}" data-name="${CONTACT_BY_AN_ADVISER}" value="true">`)
-        }
-
-        // submit form
-        $form.trigger("submit")
-    })
+    }
 })
