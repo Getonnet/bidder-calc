@@ -800,6 +800,12 @@ $(function () {
     }
 })
 
+/**
+ * -------------------------------------------------------------
+ * on successful form submission, reload the page
+ * to clear the form fields
+ * -------------------------------------------------------------
+ */
 $(document).ajaxComplete(function (event, xhr, settings) {
     if (settings.url.includes("https://webflow.com/api/v1/form/") || settings.url.includes("https://webflow.com/api/v2/form/")) {
         const isSuccessful = xhr.status === 200
