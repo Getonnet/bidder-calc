@@ -1,13 +1,15 @@
-console.log("Scripts LOADER ______ LOCALHOST: 2.0");
+console.log("Scripts LOADER ______ LOCALHOST: 2.1");
 
 const CHECKBOX_LABELS = {
   "subscription-important_features": "What is most important to you in a mobile subscription?",
   subscription_size: "Size-of-the-subscription",
 };
+
 const SUBSCRIBER_TYPE = {
   "Only for me": "individual",
   "For several/Family": "family",
 };
+
 const SUBSCRIBER_TYPE_KEY = "Subscription-are-for";
 const NO_LABEL_FOUND = "__NO__LABEL__FOUND__";
 const LEAD_FORM_SUBMIT_BUTTON_ID = "submit-first-form-btn";
@@ -16,7 +18,7 @@ const LAST_NAME = "Last-name";
 const EMAIL = "Email";
 const PHONE_NUMBER = "Phone-number";
 const OPERATOR_PRICES = "operatorPrices";
-const IGNORED_KEYS_ON_RESET = [FIRST_NAME, LAST_NAME, EMAIL, PHONE_NUMBER, OPERATOR_PRICES, "subscription-important_features"];
+// const IGNORED_KEYS_ON_RESET = [FIRST_NAME, LAST_NAME, EMAIL, PHONE_NUMBER, OPERATOR_PRICES, "subscription-important_features"];
 const SEND_OFFERS_TO_MY_EMAIL = "Send offers to my email";
 const CONTACT_BY_AN_ADVISER = "Contact by an adviser";
 const LOADING_TEXT = "Laster inn ...";
@@ -31,13 +33,14 @@ const FILTER_VALUES = {
 const sv = (key, val) => sessionStorage.setItem(key, val);
 const gv = (key) => sessionStorage.getItem(key);
 const rmv = (key) => sessionStorage.removeItem(key);
-const resetDb = () => {
-  // remove all session storage values, except for names, email, phone
-  Object.keys(sessionStorage).map((key) => {
-    if (IGNORED_KEYS_ON_RESET.includes(key)) return;
-    rmv(key);
-  });
-};
+
+// const resetDb = () => {
+//   // remove all session storage values, except for names, email, phone
+//   Object.keys(sessionStorage).map((key) => {
+//     if (IGNORED_KEYS_ON_RESET.includes(key)) return;
+//     rmv(key);
+//   });
+// };
 
 function flattenAndFindMax(arr) {
   // Flatten the array
@@ -186,6 +189,7 @@ const show_filtered_and_sorted_operators = (operatorPrices) => {
     $offer_card.find(".price_text-total").text(item.total + " nok");
     $offer_card.find(".continue_button").attr("href", item.link);
     $offer_card.find(".average-price_text").text(Math.round(item.total) + " nok per måned");
+    $offer_card.find(".data-size_text").text("0000 - test" + " GB");
 
     // update rating number
     const rating = 5 - i < 2 ? 2 : 5 - i;
@@ -370,11 +374,11 @@ $(function () {
   }
 
   // if third page
-  if ($body.hasClass("body-calc-step3")) {
-    currentStep = 3;
-    // check for session storage values and update ui
-    getOldValuesAndUpdateUI();
-  }
+  // if ($body.hasClass("body-calc-step3")) {
+  //   currentStep = 3;
+  //   // check for session storage values and update ui
+  //   getOldValuesAndUpdateUI();
+  // }
 
   // if last page, show offers and filter buttons
   if ($body.hasClass("body-calc-step4")) {
@@ -486,7 +490,7 @@ $(function () {
 
     // --------------------------------- for lead form submission
     if ($el.attr("id") === LEAD_FORM_SUBMIT_BUTTON_ID) {
-      // --------------------------------- calculate price offer for each operator
+      // calculate price offer for each operator
       const operatorPrices = [];
 
       const userType = gv(SUBSCRIBER_TYPE_KEY);
@@ -695,7 +699,8 @@ $(function () {
   $(".operator_company").on("click", handleRadioButtonClick);
 
   /**
-   * handle final form submission
+   * -------------------------------------------------------------
+   * handle lead form submission
    */
   function submitLeadForm() {
     const $form = $("#lead-form");
@@ -711,7 +716,6 @@ $(function () {
       } else $form.append(`<input type="hidden" name="${key}" data-name="${key}" value="${values[key]}">`);
     });
 
-    // $(".loading_screen").removeClass("hide");
     $(".loading_screen").show(100);
     $(".loading-bar_line").animate(
       {
@@ -724,6 +728,12 @@ $(function () {
     //resetDb();
   }
 
+  /**
+   * -------------------------------------------------------------
+   * contact request form submission
+   * on click of contact request button, submit form, and show loading screen
+   * Also append contact details to form data
+   */
   $(".offer_button-wrapper button").on("click", function (e) {
     e.preventDefault();
     const value = $(this).attr("value");

@@ -579,7 +579,7 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
 }
 
 },{}],"hXVIw":[function(require,module,exports) {
-console.log("Scripts LOADER ______ LOCALHOST: 2.0");
+console.log("Scripts LOADER ______ LOCALHOST: 2.1");
 const CHECKBOX_LABELS = {
     "subscription-important_features": "What is most important to you in a mobile subscription?",
     subscription_size: "Size-of-the-subscription"
@@ -754,6 +754,7 @@ const show_filtered_and_sorted_operators = (operatorPrices)=>{
         $offer_card.find(".price_text-total").text(item.total + " nok");
         $offer_card.find(".continue_button").attr("href", item.link);
         $offer_card.find(".average-price_text").text(Math.round(item.total) + " nok per m\xe5ned");
+        $offer_card.find(".data-size_text").text("0000 - test GB");
         // update rating number
         const rating = 5 - i < 2 ? 2 : 5 - i;
         $offer_card.find(".rating_text").text(rating + "/5");
@@ -1185,6 +1186,7 @@ $(function() {
    * Step 1 dynamic functions
    */ $(".operator_company").on("click", handleRadioButtonClick);
     /**
+   * -------------------------------------------------------------
    * handle final form submission
    */ function submitLeadForm() {
         const $form = $("#lead-form");
