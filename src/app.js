@@ -567,12 +567,13 @@ $(function () {
                 window.location.href = link
             }, 3000)
         }
-
         // --------------------------------- for lead form submission
-        if ($el.hasClass("final-submit")) {
+        else if ($el.hasClass("final-submit")) {
             $el.text(LOADING_TEXT)
             submitLeadForm()
-        } else window.location.href = link
+        }
+        // all other links
+        else window.location.href = link
     })
 
     // ========================================== END Continue button click
@@ -794,6 +795,14 @@ $(function () {
                 $form.append(`<input type="hidden" name="${key}" data-name="${key}" value="${forMattedArr.join(",")}">`)
             } else $form.append(`<input type="hidden" name="${key}" data-name="${key}" value="${key === OPERATOR_PRICES_WITH_PREFERENCES_POINTS ? "-" : values[key]}">`)
         })
+
+        // push to datalayer
+        window.dataLayer.push({
+            event: "formSubmission",
+            form_name: "bidder_lead_form",
+            // form_values: values,
+        })
+        // --- DONE gtm data push ---
 
         // submit the form
         $form.trigger("submit")

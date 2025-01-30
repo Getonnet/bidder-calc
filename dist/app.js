@@ -1072,9 +1072,7 @@ $(function() {
             setTimeout(()=>{
                 window.location.href = link;
             }, 3000);
-        }
-        // --------------------------------- for lead form submission
-        if ($el.hasClass("final-submit")) {
+        } else if ($el.hasClass("final-submit")) {
             $el.text(LOADING_TEXT);
             submitLeadForm();
         } else window.location.href = link;
@@ -1262,11 +1260,22 @@ $(function() {
                 $form.append(`<input type="hidden" name="${key}" data-name="${key}" value="${forMattedArr.join(",")}">`);
             } else $form.append(`<input type="hidden" name="${key}" data-name="${key}" value="${key === OPERATOR_PRICES_WITH_PREFERENCES_POINTS ? "-" : values[key]}">`);
         });
+        // push to datalayer
+        window.dataLayer.push({
+            event: "formSubmission",
+            form_name: "bidder_lead_form"
+        });
+        // --- DONE gtm data push ---
         // submit the form
         $form.trigger("submit");
     }
 });
-$(document).ajaxComplete(function(event, xhr, settings) {
+/**
+ * -------------------------------------------------------------
+ * on successful form submission, reload the page
+ * to clear the form fields
+ * -------------------------------------------------------------
+ */ $(document).ajaxComplete(function(event, xhr, settings) {
     if (settings.url.includes("https://webflow.com/api/v1/form/") || settings.url.includes("https://webflow.com/api/v2/form/")) {
         const isSuccessful = xhr.status === 200;
         const redirectFormName = "redirect-form-hehexd";

@@ -1,5 +1,6 @@
 .progress_text {
   width: max-content;
+  min-width: max-content !important;
 }
 
 .progress_line-block:last-child .progress_line {
