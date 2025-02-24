@@ -1,4 +1,4 @@
-console.log("Scripts LOADER ______ LOCALHOST: 3.0.0")
+console.log("Scripts LOADER ______ LOCALHOST: 4.1.0")
 
 const CHECKBOX_LABELS = {
     "subscription-important_features": "What is most important to you in a mobile subscription?",
@@ -110,25 +110,35 @@ const getTotalFromSizes = (prices, sizes) => {
     return [Math.floor(total / Object.keys(sizes).length), link]
 }
 
+const getPricesAndLinksPerSize = (prices, sizes) => {
+    let result = {}
+
+    Object.keys(sizes).map((key) => {
+        sizes[key].map((item) => {
+            let selectedPrice = prices.find((x) => x.split("=")[0] === item.toString())
+            const [price, link] = selectedPrice ? selectedPrice.split("=")[1].split(",") : [0, ""]
+            result[item] = {
+                price,
+                link
+            }
+        })
+    })
+
+    return result
+}
+
 const getDataSizeForDisplay = () => {
     const currentSizes = gv(CHECKBOX_LABELS.subscription_size)
     const currentSizesIsArray = getType(currentSizes) === "array"
     const sizes = currentSizesIsArray ? JSON.parse(currentSizes) : [currentSizes]
+
+    // only keep first item, since range was removed (ex: 1:4-4 -> 4)
     const formattedSizes = sizes.map((size) => {
         const [key, value] = size.split(":")
-        return value
+        return value.split("-")[0]
     })
 
-    if (formattedSizes.length === 1) return formattedSizes[0] + " GB"
-
-    // get the lowest and highest values (num-num)
-    const unifiedArr = formattedSizes.map((item) => {
-        return item.split("-")
-    })
-    const unifiedArrFlat = unifiedArr.flat()
-    const min = Math.min(...unifiedArrFlat)
-    const max = Math.max(...unifiedArrFlat)
-    return min + "-" + max + " GB"
+    return [...new Set(formattedSizes)].sort((a, b) => a - b)
 }
 
 const getType = (val) => {
@@ -208,8 +218,24 @@ const show_filtered_and_sorted_operators = (operatorPrices) => {
         // update price and links and rating
         $offer_card.find(".price_text-total").text(item.total + " nok")
         $offer_card.find(".continue_button").attr("href", item.link)
-        $offer_card.find(".average-price_text").text(Math.round(item.total) + " nok per måned")
-        $offer_card.find(".data-size_text").text(getDataSizeForDisplay())
+        // $offer_card.find(".average-price_text").text(Math.round(item.total) + " nok per måned")
+
+        const dataSizes = getDataSizeForDisplay()
+        console.log(dataSizes)
+        const priceAndSizesWrapper = $offer_card.find(".price-data-size-wrapper")
+        dataSizes.forEach((size, i) => {
+            if (i === 0) {
+                priceAndSizesWrapper.find(".data-size_text").html("<b>" + size + "</b> GB ")
+                priceAndSizesWrapper.find(".average-price_text").text(item.pricesAndLinksPerSize[size].price + " nok/mnd")
+                priceAndSizesWrapper.find(".continue_button").attr("href", item.pricesAndLinksPerSize[size].link)
+            } else {
+                const $clone = priceAndSizesWrapper.clone()
+                $clone.find(".data-size_text").html("<b>" + size + "</b> GB ")
+                $clone.find(".average-price_text").text(item.pricesAndLinksPerSize[size].price + " nok/mnd")
+                $clone.find(".continue_button").attr("href", item.pricesAndLinksPerSize[size].link)
+                $offer_card.find(".button-services.w-button").before($clone)
+            }
+        })
 
         // update rating number
         const rating = 5 - i < 2 ? 2 : 5 - i
@@ -492,6 +518,18 @@ $(function () {
             }
         })
 
+        // --------------------------------- for first page
+        if (currentStep === 1) {
+            // if at least one checkbox under ".subscription-important_features" is not checked
+            // then show error message
+            const $checkboxes = $(".subscription-important_features input[type='checkbox']")
+            const $checked = $checkboxes.filter((index, el) => $(el).is(":checked"))
+            if (!$checked.length) {
+                errors = true
+                showErrorMessages($checkboxes.first())
+            }
+        }
+
         // --------------------------------- for repeater size fields
         if (currentStep === 2) {
             const $sizeFieldsWrap = $(".size-fields-wrapper")
@@ -541,11 +579,13 @@ $(function () {
                 // if name matches current-operator, skip
                 const prices = $el.text().split("\n")
                 const [total, link] = getTotalFromSizes(prices, sizes)
+                const pricesAndLinksPerSize = getPricesAndLinksPerSize(prices, sizes)
                 operatorPrices.push({
                     operatorName,
                     total,
                     link,
                     currentOperator: gv(CURRENT_OPERATOR_FIELD_NAME)?.toLowerCase() === operatorName.toLowerCase(),
+                    pricesAndLinksPerSize,
                 })
             })
 
