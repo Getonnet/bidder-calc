@@ -579,7 +579,7 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
 }
 
 },{}],"hXVIw":[function(require,module,exports) {
-console.log("Scripts LOADER ______ LOCALHOST: 2.22");
+console.log("Scripts LOADER ______ LOCALHOST: 3.0.0");
 const CHECKBOX_LABELS = {
     "subscription-important_features": "What is most important to you in a mobile subscription?",
     subscription_size: "Size-of-the-subscription"
@@ -596,7 +596,6 @@ const LAST_NAME = "Last-name";
 const EMAIL = "Email";
 const PHONE_NUMBER = "Phone-number";
 const OPERATOR_PRICES = "operatorPrices";
-// const IGNORED_KEYS_ON_RESET = [FIRST_NAME, LAST_NAME, EMAIL, PHONE_NUMBER, OPERATOR_PRICES, "subscription-important_features"];
 const SEND_OFFERS_TO_MY_EMAIL = "Send offers to my email";
 const CONTACT_BY_AN_ADVISER = "Contact by an adviser";
 const LOADING_TEXT = "Laster inn ...";
@@ -939,12 +938,6 @@ $(function() {
         // check for session storage values and update ui
         getOldValuesAndUpdateUI();
     }
-    // if third page
-    // if ($body.hasClass("body-calc-step3")) {
-    //   currentStep = 3;
-    //   // check for session storage values and update ui
-    //   getOldValuesAndUpdateUI();
-    // }
     // if last page, show offers and filter buttons
     if ($body.hasClass("body-calc-step4")) {
         currentStep = 4;
