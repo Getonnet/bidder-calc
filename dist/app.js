@@ -579,7 +579,7 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
 }
 
 },{}],"hXVIw":[function(require,module,exports) {
-console.log("Scripts LOADER ______ LOCALHOST: 4.1.0");
+console.log("Scripts LOADER ______ LOCALHOST: 5.0.0");
 const CHECKBOX_LABELS = {
     "subscription-important_features": "What is most important to you in a mobile subscription?",
     subscription_size: "Size-of-the-subscription"
@@ -842,6 +842,16 @@ const merge_preferences_points_with_operator_prices = (operatorPrices, preferenc
     // save to storage
     sv(OPERATOR_PRICES_WITH_PREFERENCES_POINTS, JSON.stringify(operatorPricesWithPreferencesPoints));
 };
+const reInitSliders = ($selector = ".js-range-slider")=>{
+    setTimeout(()=>{
+        // reinit sliders
+        const $sliders = $(`${$selector}`);
+        $sliders.each(function(index, el) {
+            const $slider = $(el);
+            const s = $slider.ionRangeSlider();
+        });
+    }, 300);
+};
 $(function() {
     let $body = $("body");
     let currentStep = 1;
@@ -879,6 +889,8 @@ $(function() {
         const { isIndividual } = getSubscriberType();
         const currentSizes = gv(CHECKBOX_LABELS.subscription_size);
         const currentSizesIsArray = getType(currentSizes) === "array";
+        // init range sliders
+        reInitSliders();
         if (isIndividual) {
             $("#more-sizes").addClass("hidden");
             $("[individual-sizes]").removeClass("hidden");
@@ -909,6 +921,7 @@ $(function() {
                 $clone.find("input").prop("checked", false);
                 $clone.find(".w-radio-input").removeClass("w--redirected-checked");
                 $clone.find(".w-radio-input").parent().removeClass("is-active");
+                $clone.find("span.irs.irs--round.js-irs-0.irs-with-grid").remove();
                 // update attributes of input fields
                 const inputFields = $clone.find("input");
                 inputFields.each(function(index, el) {
@@ -927,6 +940,8 @@ $(function() {
                 hideErrorMessages(inputFields.first());
                 // append to parent
                 sizeFieldsWrap.append($clone);
+                // reinit sliders
+                reInitSliders();
             });
             // handle delete size field
             sizeFieldsWrap.on("click", ".delete-size", function() {
@@ -947,6 +962,8 @@ $(function() {
                 serialNums.each(function(index, el) {
                     $(el).text(formatNumber(index + 1));
                 });
+                // reinit sliders
+                reInitSliders();
             });
             // ========================================== END STEP 2
             /**
