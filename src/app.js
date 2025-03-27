@@ -1,4 +1,4 @@
-console.log("Scripts LOADER ______ LOCALHOST: 4.1.0")
+console.log("Scripts LOADER ______ LOCALHOST: 5.0.0")
 
 const CHECKBOX_LABELS = {
     "subscription-important_features": "What is most important to you in a mobile subscription?",
@@ -203,6 +203,9 @@ const show_filtered_and_sorted_operators = (operatorPrices) => {
     // reset rating icon fill to #D9D9D8
     $(".rating_icon svg path").attr("fill", "#D9D9D8")
 
+    // initiallyhide all offer cards
+    $(".offer_card").hide()
+
     operatorPrices.forEach((item, i) => {
         const $offer_card = $(`#${item.operatorName.toLowerCase()}`)
 
@@ -221,8 +224,9 @@ const show_filtered_and_sorted_operators = (operatorPrices) => {
         // $offer_card.find(".average-price_text").text(Math.round(item.total) + " nok per måned")
 
         const dataSizes = getDataSizeForDisplay()
-        console.log(dataSizes)
+        // console.log(dataSizes)
         const priceAndSizesWrapper = $offer_card.find(".price-data-size-wrapper")
+
         dataSizes.forEach((size, i) => {
             if (i === 0) {
                 priceAndSizesWrapper.find(".data-size_text").html("<b>" + size + "</b> GB ")
@@ -242,7 +246,7 @@ const show_filtered_and_sorted_operators = (operatorPrices) => {
         $offer_card.find(".rating_text").text(rating + "/5")
         // add color to rating dots
         if (rating >= 5) {
-            $offer_card.find(".rating_icon svg path:lt(5)").attr("fill", "#F8B200")
+            $offer_card.find(".rating_icon svg path:lt(5)").attr("fill", "#F7A000")
         } else if (rating >= 4) {
             $offer_card.find(".rating_icon svg path:lt(4)").attr("fill", "#F8B200")
         } else if (rating >= 3) {
@@ -294,6 +298,34 @@ const merge_preferences_points_with_operator_prices = (operatorPrices, preferenc
     sv(OPERATOR_PRICES_WITH_PREFERENCES_POINTS, JSON.stringify(operatorPricesWithPreferencesPoints))
 }
 
+const save_subscription_size = (index, data) => {
+    console.log(data.from)
+    const currentSizes = gv(CHECKBOX_LABELS.subscription_size)
+    const currentSizesIsArray = getType(currentSizes) === "array"
+    const sizes = currentSizesIsArray ? JSON.parse(currentSizes) : [currentSizes]
+    sizes[index] = `${index+1}:${data.from}-${data.from}`
+    sv(CHECKBOX_LABELS.subscription_size, JSON.stringify(sizes))
+}
+
+const reInitSliders = ($selector = ".js-range-slider") => {
+    setTimeout(() => {
+        const $sliders = $(`${$selector}`)
+        $sliders.each(function (index, el) {
+            const $slider = $(el)
+            const s = $slider.ionRangeSlider({
+                onStart: function (data) {
+                    // fired then range slider is ready
+                    save_subscription_size(index, data)
+                },
+                onFinish: function (data) {
+                    // fired on pointer release
+                    save_subscription_size(index, data)
+                },
+            })
+        })
+    }, 300)
+}
+
 $(function () {
     let $body = $("body")
     let currentStep = 1
@@ -338,9 +370,12 @@ $(function () {
     // depending on subscriber type, show/hide generate sizes button
     if ($body.hasClass("body-calc-step2")) {
         currentStep = 2
-        const { isIndividual } = getSubscriberType()
+        const { isIndividual, isFamily } = getSubscriberType()
         const currentSizes = gv(CHECKBOX_LABELS.subscription_size)
         const currentSizesIsArray = getType(currentSizes) === "array"
+
+        // init range sliders
+        reInitSliders()
 
         if (isIndividual) {
             $("#more-sizes").addClass("hidden")
@@ -378,6 +413,7 @@ $(function () {
                 $clone.find("input").prop("checked", false)
                 $clone.find(".w-radio-input").removeClass("w--redirected-checked")
                 $clone.find(".w-radio-input").parent().removeClass("is-active")
+                $clone.find("span.irs.irs--round.js-irs-0.irs-with-grid").remove()
 
                 // update attributes of input fields
                 const inputFields = $clone.find("input")
@@ -400,6 +436,9 @@ $(function () {
 
                 // append to parent
                 sizeFieldsWrap.append($clone)
+
+                // reinit sliders
+                reInitSliders()
             })
 
             // handle delete size field
@@ -420,6 +459,9 @@ $(function () {
                 serialNums.each(function (index, el) {
                     $(el).text(formatNumber(index + 1))
                 })
+
+                // reinit sliders
+                reInitSliders()
             })
             // ========================================== END STEP 2
 
@@ -533,32 +575,21 @@ $(function () {
         // --------------------------------- for repeater size fields
         if (currentStep === 2) {
             const $sizeFieldsWrap = $(".size-fields-wrapper")
-            if ($sizeFieldsWrap.length && isFamily) {
-                // if at least one radio is not selected under each row
-                // then show error message
-                const $sizeFields = $sizeFieldsWrap.find(".form-field-container")
-                $sizeFields.each(function (index, el) {
-                    const $inputs = $(el).find("input")
-                    const $checkboxes = $inputs.filter((index, el) => $(el).attr("type") === "radio")
-                    const $checked = $checkboxes.filter((index, el) => $(el).is(":checked"))
-                    if (!$checked.length) {
+            // Check if size fields wrapper exists and if it's either family or individual
+            if ($sizeFieldsWrap.length && (isFamily || isIndividual)) {
+                const $sizeFieldInputs = $sizeFieldsWrap.find("input.js-range-slider")
+                // Check each range slider to ensure none are empty
+                $sizeFieldInputs.each(function() {
+                    if (!$(this).val()) {
                         errors = true
-                        showErrorMessages($inputs.first())
+                        showErrorMessages($(this))
+                        return false; // break the loop on first error
                     }
-                })
-            }
-            if ($sizeFieldsWrap.length && isIndividual) {
-                // if at least one radio button is not checked under the form
-                // then show error message
-                const $sizeFieldInputs = $sizeFieldsWrap.find("input[type='radio']")
-                if (!$sizeFieldInputs.filter(":checked").length) {
-                    errors = true
-                    showErrorMessages($sizeFieldInputs.first())
-                }
+                });
             }
         }
 
-        if (errors) return
+        if (errors) return;
 
         // --------------------------------- prices calculation
         if ($el.attr("id") === "calculate-prices") {
@@ -572,6 +603,9 @@ $(function () {
             const rawPricesPerOperator = $(`[data-type='${SUBSCRIBER_TYPE[userType]}']`)
             if (!rawPricesPerOperator.length) throw new Error("No prices found for the selected user type, check data-type attribute & printed data from webflow in page 2")
             const sizes = getFormattedSizes(JSON.parse(gv(CHECKBOX_LABELS.subscription_size)))
+
+            // console.log("Sizes for prices calculation", sizes);
+            // console.log("Raw prices per operator", rawPricesPerOperator);
 
             rawPricesPerOperator.each(function (index, el) {
                 const $el = $(el)
