@@ -859,7 +859,19 @@ const reInitSliders = ($selector = ".js-range-slider")=>{
         const $sliders = $(`${$selector}`);
         $sliders.each(function(index, el) {
             const $slider = $(el);
+            const max = $slider.attr("max");
             const s = $slider.ionRangeSlider({
+                values: [
+                    ...Array.from({
+                        length: max
+                    }, (_, i)=>i),
+                    max,
+                    "Fri Data"
+                ],
+                prettify: function(value) {
+                    if (value === "Fri Data") return "Fri Data";
+                    return value + " GB";
+                },
                 onStart: function(data) {
                     // fired then range slider is ready
                     save_subscription_size(index, data);
