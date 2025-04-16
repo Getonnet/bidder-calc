@@ -855,6 +855,9 @@ const save_subscription_size = (index, data)=>{
     sv(CHECKBOX_LABELS.subscription_size, JSON.stringify(sizes));
 };
 const reInitSliders = ($selector = ".js-range-slider")=>{
+    // if mobile, set data-grid to false
+    if (window.innerWidth < 1024) $(`${$selector}`).attr("data-grid", false);
+    else $(`${$selector}`).attr("data-grid", true);
     setTimeout(()=>{
         const $sliders = $(`${$selector}`);
         $sliders.each(function(index, el) {
@@ -884,6 +887,11 @@ const reInitSliders = ($selector = ".js-range-slider")=>{
         });
     }, 300);
 };
+// on window resize, reinit sliders
+window.addEventListener("resize", ()=>{
+    // if width is less than 1024, reinit sliders
+    if (window.innerWidth < 1024) reInitSliders();
+});
 $(function() {
     let $body = $("body");
     let currentStep = 1;
