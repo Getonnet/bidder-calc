@@ -778,7 +778,9 @@ const show_filtered_and_sorted_operators = (operatorPrices)=>{
         });
         // update price and links and rating
         $offer_card.find(".price_text-total").text(item.total + " nok");
-        $offer_card.find(".continue_button").attr("href", item.link);
+        // $offer_card.find(".continue_button").attr("href", item.link)
+        $offer_card.find(".button-link").attr("href", item.link);
+        console.log($offer_card.find(".button-link"));
         // $offer_card.find(".average-price_text").text(Math.round(item.total) + " nok per måned")
         const dataSizes = getDataSizeForDisplay();
         // console.log(dataSizes)
@@ -788,11 +790,13 @@ const show_filtered_and_sorted_operators = (operatorPrices)=>{
                 priceAndSizesWrapper.find(".data-size_text").html("<b>" + size + "</b> GB ");
                 priceAndSizesWrapper.find(".average-price_text").text(item.pricesAndLinksPerSize[size].price + " nok/mnd");
                 priceAndSizesWrapper.find(".continue_button").attr("href", item.pricesAndLinksPerSize[size].link);
+                priceAndSizesWrapper.find(".button-link").attr("href", item.pricesAndLinksPerSize[size].link);
             } else {
                 const $clone = priceAndSizesWrapper.clone();
                 $clone.find(".data-size_text").html("<b>" + size + "</b> GB ");
                 $clone.find(".average-price_text").text(item.pricesAndLinksPerSize[size].price + " nok/mnd");
                 $clone.find(".continue_button").attr("href", item.pricesAndLinksPerSize[size].link);
+                $clone.find(".button-link").attr("href", item.pricesAndLinksPerSize[size].link);
                 $offer_card.find(".button-services.w-button").before($clone);
             }
         });

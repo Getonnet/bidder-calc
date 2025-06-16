@@ -1,22 +1,23 @@
 {
-  "name": "bidder-calc-custom-code",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "parcel src/* --hmr-port 50619 --no-source-maps"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "jquery": "^3.7.1",
-    "parcel": "^2.11.0"
-  },
-  "devDependencies": {
-    "@parcel/transformer-sass": "2.11.0",
-    "@types/jquery": "^3.5.29",
-    "prettier": "3.2.4"
-  },
-  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
+    "name": "bidder-calc-custom-code",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "parcel src/* --hmr-port 50619 --no-source-maps",
+        "build": "parcel build src/* --no-source-maps"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "jquery": "^3.7.1",
+        "parcel": "^2.11.0"
+    },
+    "devDependencies": {
+        "@parcel/transformer-sass": "2.11.0",
+        "@types/jquery": "^3.5.29",
+        "prettier": "3.2.4"
+    },
+    "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
 }
