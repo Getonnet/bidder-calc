@@ -233,11 +233,13 @@ const show_filtered_and_sorted_operators = (operatorPrices) => {
                 priceAndSizesWrapper.find(".data-size_text").html("<b>" + size + "</b> GB ")
                 priceAndSizesWrapper.find(".average-price_text").text(item.pricesAndLinksPerSize[size].price + " nok/mnd")
                 priceAndSizesWrapper.find(".continue_button").attr("href", item.pricesAndLinksPerSize[size].link)
+                priceAndSizesWrapper.find(".button-link").attr("href", item.pricesAndLinksPerSize[size].link)
             } else {
                 const $clone = priceAndSizesWrapper.clone()
                 $clone.find(".data-size_text").html("<b>" + size + "</b> GB ")
                 $clone.find(".average-price_text").text(item.pricesAndLinksPerSize[size].price + " nok/mnd")
                 $clone.find(".continue_button").attr("href", item.pricesAndLinksPerSize[size].link)
+                $clone.find(".button-link").attr("href", item.pricesAndLinksPerSize[size].link)
                 $offer_card.find(".button-services.w-button").before($clone)
             }
         })
