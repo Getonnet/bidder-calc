@@ -222,6 +222,7 @@ const show_filtered_and_sorted_operators = (operatorPrices) => {
         $offer_card.find(".price_text-total").text(item.total + " nok");
         // $offer_card.find(".continue_button").attr("href", item.link)
         $offer_card.find(".button-link").attr("href", item.link);
+        console.log($offer_card.find(".button-link"))
         // $offer_card.find(".average-price_text").text(Math.round(item.total) + " nok per måned")
 
         const dataSizes = getDataSizeForDisplay()
