@@ -698,12 +698,14 @@ const getPricesAndLinksPerSize = (prices, sizes)=>{
     Object.keys(sizes).map((key)=>{
         sizes[key].map((item)=>{
             let selectedPrice = prices.find((x)=>x.split("=")[0] === item.toString());
+            if (!selectedPrice) // if price is not found, find closest match
+            selectedPrice = findClosestMatch(item, prices);
             const [price, link] = selectedPrice ? selectedPrice.split("=")[1].split(",") : [
                 0,
                 ""
             ];
             result[item] = {
-                price,
+                price: price.toString(),
                 link
             };
         });
