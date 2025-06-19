@@ -142,13 +142,13 @@
       this[globalName] = mainExports;
     }
   }
-})({"ezQqb":[function(require,module,exports) {
+})({"dXKgy":[function(require,module,exports) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = 50619;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "42036d7a98ade5a7";
-module.bundle.HMR_BUNDLE_ID = "bfcbaa651269b41d";
+module.bundle.HMR_BUNDLE_ID = "90d069a102f5b6da";
 "use strict";
 /* global HMR_HOST, HMR_PORT, HMR_ENV_HASH, HMR_SECURE, chrome, browser, __parcel__import__, __parcel__importScripts__, ServiceWorkerGlobalScope */ /*::
 import type {
@@ -578,7 +578,7 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
     });
 }
 
-},{}],"fJe33":[function(require,module,exports) {
+},{}],"1MRK9":[function(require,module,exports) {
 console.log("Scripts LOADER ______ LOCALHOST: 5.0.0");
 const CHECKBOX_LABELS = {
     "subscription-important_features": "What is most important to you in a mobile subscription?",
@@ -1013,7 +1013,8 @@ $(function() {
                 const parentElPosition = parentEl.index();
                 // const $inputs = $el.closest(".details_title-wrap").siblings(".form-block").find("input");
                 const label = CHECKBOX_LABELS.subscription_size;
-                const oldValues = JSON.parse(gv(label)); // this is always and array, since delete button only available for multiple sizes
+                const oldValues = JSON.parse(gv(label)) // this is always and array, since delete button only available for multiple sizes
+                ;
                 const newValues = oldValues.filter((_, i)=>i !== parentElPosition);
                 saveInputValue(label, JSON.stringify(newValues));
                 // remove element
@@ -1047,7 +1048,8 @@ $(function() {
     if ($body.hasClass("body-calc-step4")) {
         currentStep = 4;
         const operatorPrices = JSON.parse(gv("operatorPrices"));
-        const preferences = JSON.parse(gv(CHECKBOX_LABELS["subscription-important_features"])).filter(Boolean); // the filter is to remove falsy values
+        const preferences = JSON.parse(gv(CHECKBOX_LABELS["subscription-important_features"])).filter(Boolean) // the filter is to remove falsy values
+        ;
         // prepare preferences points filter and data
         merge_preferences_points_with_operator_prices(operatorPrices, preferences);
         // on page load, update order and rating
@@ -1394,5 +1396,5 @@ $(function() {
     }
 });
 
-},{}]},["ezQqb","fJe33"], "fJe33", "parcelRequire3bc0")
+},{}]},["dXKgy","1MRK9"], "1MRK9", "parcelRequire3bc0")
 

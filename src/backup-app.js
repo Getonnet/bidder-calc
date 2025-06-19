@@ -92,14 +92,34 @@ const getFormattedSizes = (sizes) => {
     return result
 }
 
+const findClosestMatch = (size, prices) => {
+    const pricesNumArray = prices.map((x) => parseInt(x.split("=")[0]))
+    const closestMatch = pricesNumArray.reduce((prev, curr) => {
+        return (Math.abs(curr - size) < Math.abs(prev - size) ? curr : prev)
+    })
+    return prices.find((x) => x.split("=")[0] === closestMatch.toString())
+}
+
 const getTotalFromSizes = (prices, sizes) => {
+    // console.log("prices ------------")
+    // console.log(prices)
+    // console.log("sizes ------------")
+    // console.log(sizes)
+
     let total = 0
     const biggestSize = flattenAndFindMax(Object.values(sizes))
     let link = ""
 
     Object.keys(sizes).map((key) => {
         sizes[key].map((item) => {
+            // "1=329,https://go.adt231.net/t/t?a=1784390855&as=1983089419&t=2&tk=1"
             let price = prices.find((x) => x.split("=")[0] === item.toString())
+            if (!price) {
+                // if size is not found, find closest match
+                price = findClosestMatch(item, prices)
+                console.log("price not found for size", item)
+                console.log("closest match", price)
+            }
             total += parseInt(price ? price.split("=")[1] : 0)
             // get link for biggest size, each size can have different links
             if (item.toString() === biggestSize.toString()) link = price.split(",")[1]
