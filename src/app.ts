@@ -100,7 +100,7 @@ const findClosestMatch = (size, prices) => {
     return prices.find((x) => x.split("=")[0] === closestMatch.toString());
 };
 
-const getTotalFromSizes = (prices, sizes) => {
+const getTotalFromSizes = (prices: string[], sizes: Record<string, number[]>) => {
     // console.log("prices ------------")
     // console.log(prices)
     // console.log("sizes ------------")
@@ -120,9 +120,9 @@ const getTotalFromSizes = (prices, sizes) => {
                 console.log("price not found for size", item);
                 console.log("closest match", price);
             }
-            total += parseInt(price ? price.split("=")[1] : 0);
+            total += parseInt(price ? price.split("=")[1] : "0");
             // get link for biggest size, each size can have different links
-            if (item.toString() === biggestSize.toString()) link = price.split(",")[1];
+            if (item.toString() === biggestSize.toString()) link = price ? price.split(",")[1] : "";
         });
     });
 
@@ -131,7 +131,7 @@ const getTotalFromSizes = (prices, sizes) => {
 };
 
 const getPricesAndLinksPerSize = (prices: string[], sizes: Record<string, number[]>) => {
-    let result: Record<string, { price: string; link: string }> = {};
+    let result: Record<string, { price: string; link: string; size: string }> = {};
 
     Object.keys(sizes).map((key) => {
         sizes[key].map((item) => {
@@ -141,9 +141,11 @@ const getPricesAndLinksPerSize = (prices: string[], sizes: Record<string, number
                 selectedPrice = findClosestMatch(item, prices);
             }
             const [price, link] = selectedPrice ? selectedPrice.split("=")[1].split(",") : [0, ""];
-            result[item] = {
+            const size = selectedPrice ? selectedPrice.split("=")[0] : item.toString();
+            result[size] = {
                 price: price.toString(),
                 link,
+                size,
             };
         });
     });
@@ -151,18 +153,19 @@ const getPricesAndLinksPerSize = (prices: string[], sizes: Record<string, number
     return result;
 };
 
-const getDataSizeForDisplay = () => {
+const getDataSizeForDisplay = (): string[] => {
     const currentSizes = gv(CHECKBOX_LABELS.subscription_size);
+    if (!currentSizes) throw new Error("No package sizes found, check session storage");
     const currentSizesIsArray = getType(currentSizes) === "array";
     const sizes = currentSizesIsArray ? JSON.parse(currentSizes) : [currentSizes];
 
     // only keep first item, since range was removed (ex: 1:4-4 -> 4)
-    const formattedSizes = sizes.map((size) => {
-        const [key, value] = size.split(":");
+    const formattedSizes: string[] = sizes.map((size: string) => {
+        const [, value] = size.split(":");
         return value.split("-")[0];
     });
 
-    return [...new Set(formattedSizes)].sort((a, b) => a - b);
+    return [...new Set(formattedSizes)].sort((a, b) => Number(a) - Number(b));
 };
 
 const getType = (val) => {
@@ -644,12 +647,19 @@ $(function () {
             showFullScreenLoader();
 
             // calculate price offer for each operator
-            const operatorPrices = [];
+            const operatorPrices: {
+                operatorName: string | undefined;
+                total: number;
+                link: string;
+                currentOperator: boolean;
+                pricesAndLinksPerSize: Record<string, { price: string; link: string; size: string }>;
+            }[] = [];
 
             const userType = gv(SUBSCRIBER_TYPE_KEY);
+            if (!userType) throw new Error("No user type found, check session storage");
             const rawPricesPerOperator = $(`[data-type='${SUBSCRIBER_TYPE[userType]}']`);
             if (!rawPricesPerOperator.length) throw new Error("No prices found for the selected user type, check data-type attribute & printed data from webflow in page 2");
-            const sizes = getFormattedSizes(JSON.parse(gv(CHECKBOX_LABELS.subscription_size)));
+            const sizes = getFormattedSizes(JSON.parse(gv(CHECKBOX_LABELS.subscription_size) || "[]"));
 
             // console.log("Sizes for prices calculation", sizes);
             // console.log("Raw prices per operator", rawPricesPerOperator);
@@ -663,21 +673,22 @@ $(function () {
                 const pricesAndLinksPerSize = getPricesAndLinksPerSize(prices, sizes);
                 operatorPrices.push({
                     operatorName,
-                    total,
-                    link,
-                    currentOperator: gv(CURRENT_OPERATOR_FIELD_NAME)?.toLowerCase() === operatorName.toLowerCase(),
+                    total: Number(total),
+                    link: link.toString(),
+                    currentOperator: gv(CURRENT_OPERATOR_FIELD_NAME)?.toLowerCase() === operatorName?.toLowerCase(),
                     pricesAndLinksPerSize,
                 });
             });
 
             // sort by price
             operatorPrices.sort((a, b) => a.total - b.total);
+
             // save to session storage
             sv("operatorPrices", JSON.stringify(operatorPrices));
 
             // navigate to next page
             setTimeout(() => {
-                window.location.href = link;
+                window.location.href = link || "#";
             }, 3000);
         }
         // --------------------------------- for lead form submission
@@ -686,7 +697,7 @@ $(function () {
             submitLeadForm();
         }
         // all other links
-        else window.location.href = link;
+        else window.location.href = link || "#";
     });
 
     // ========================================== END Continue button click

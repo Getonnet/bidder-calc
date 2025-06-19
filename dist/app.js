@@ -682,9 +682,9 @@ const getTotalFromSizes = (prices, sizes)=>{
                 console.log("price not found for size", item);
                 console.log("closest match", price);
             }
-            total += parseInt(price ? price.split("=")[1] : 0);
+            total += parseInt(price ? price.split("=")[1] : "0");
             // get link for biggest size, each size can have different links
-            if (item.toString() === biggestSize.toString()) link = price.split(",")[1];
+            if (item.toString() === biggestSize.toString()) link = price ? price.split(",")[1] : "";
         });
     });
     // average for all selected sizes
@@ -704,9 +704,11 @@ const getPricesAndLinksPerSize = (prices, sizes)=>{
                 0,
                 ""
             ];
-            result[item] = {
+            const size = selectedPrice ? selectedPrice.split("=")[0] : item.toString();
+            result[size] = {
                 price: price.toString(),
-                link
+                link,
+                size
             };
         });
     });
@@ -714,18 +716,19 @@ const getPricesAndLinksPerSize = (prices, sizes)=>{
 };
 const getDataSizeForDisplay = ()=>{
     const currentSizes = gv(CHECKBOX_LABELS.subscription_size);
+    if (!currentSizes) throw new Error("No package sizes found, check session storage");
     const currentSizesIsArray = getType(currentSizes) === "array";
     const sizes = currentSizesIsArray ? JSON.parse(currentSizes) : [
         currentSizes
     ];
     // only keep first item, since range was removed (ex: 1:4-4 -> 4)
     const formattedSizes = sizes.map((size)=>{
-        const [key, value] = size.split(":");
+        const [, value] = size.split(":");
         return value.split("-")[0];
     });
     return [
         ...new Set(formattedSizes)
-    ].sort((a, b)=>a - b);
+    ].sort((a, b)=>Number(a) - Number(b));
 };
 const getType = (val)=>{
     try {
@@ -1147,9 +1150,10 @@ $(function() {
             // calculate price offer for each operator
             const operatorPrices = [];
             const userType = gv(SUBSCRIBER_TYPE_KEY);
+            if (!userType) throw new Error("No user type found, check session storage");
             const rawPricesPerOperator = $(`[data-type='${SUBSCRIBER_TYPE[userType]}']`);
             if (!rawPricesPerOperator.length) throw new Error("No prices found for the selected user type, check data-type attribute & printed data from webflow in page 2");
-            const sizes = getFormattedSizes(JSON.parse(gv(CHECKBOX_LABELS.subscription_size)));
+            const sizes = getFormattedSizes(JSON.parse(gv(CHECKBOX_LABELS.subscription_size) || "[]"));
             // console.log("Sizes for prices calculation", sizes);
             // console.log("Raw prices per operator", rawPricesPerOperator);
             rawPricesPerOperator.each(function(index, el) {
@@ -1161,9 +1165,9 @@ $(function() {
                 const pricesAndLinksPerSize = getPricesAndLinksPerSize(prices, sizes);
                 operatorPrices.push({
                     operatorName,
-                    total,
-                    link,
-                    currentOperator: gv(CURRENT_OPERATOR_FIELD_NAME)?.toLowerCase() === operatorName.toLowerCase(),
+                    total: Number(total),
+                    link: link.toString(),
+                    currentOperator: gv(CURRENT_OPERATOR_FIELD_NAME)?.toLowerCase() === operatorName?.toLowerCase(),
                     pricesAndLinksPerSize
                 });
             });
@@ -1173,12 +1177,12 @@ $(function() {
             sv("operatorPrices", JSON.stringify(operatorPrices));
             // navigate to next page
             setTimeout(()=>{
-                window.location.href = link;
+                window.location.href = link || "#";
             }, 3000);
         } else if ($el.hasClass("final-submit")) {
             $el.text(LOADING_TEXT);
             submitLeadForm();
-        } else window.location.href = link;
+        } else window.location.href = link || "#";
     });
     // ========================================== END Continue button click
     function saveInputValue(name, val) {
