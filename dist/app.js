@@ -579,6 +579,8 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
 }
 
 },{}],"fJe33":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
 console.log("Scripts LOADER ______ LOCALHOST: 5.0.0");
 const CHECKBOX_LABELS = {
     "subscription-important_features": "What is most important to you in a mobile subscription?",
@@ -662,7 +664,9 @@ const findClosestMatch = (size, prices)=>{
     const closestMatch = pricesNumArray.reduce((prev, curr)=>{
         return Math.abs(curr - size) < Math.abs(prev - size) ? curr : prev;
     });
-    return prices.find((x)=>x.split("=")[0] === closestMatch.toString());
+    const result = prices.find((x)=>x.split("=")[0] === closestMatch.toString());
+    if (!result) throw new Error(`No closest match found for size ${size}, prices: ${prices}`);
+    return result;
 };
 const getTotalFromSizes = (prices, sizes)=>{
     // console.log("prices ------------")
@@ -694,7 +698,7 @@ const getTotalFromSizes = (prices, sizes)=>{
     ];
 };
 const getPricesAndLinksPerSize = (prices, sizes)=>{
-    let result = {};
+    let result = [];
     Object.keys(sizes).map((key)=>{
         sizes[key].map((item)=>{
             let selectedPrice = prices.find((x)=>x.split("=")[0] === item.toString());
@@ -705,31 +709,27 @@ const getPricesAndLinksPerSize = (prices, sizes)=>{
                 ""
             ];
             const size = selectedPrice ? selectedPrice.split("=")[0] : item.toString();
-            result[size] = {
+            result.push({
                 price: price.toString(),
                 link,
                 size
-            };
+            });
         });
     });
     return result;
 };
-const getDataSizeForDisplay = ()=>{
-    const currentSizes = gv(CHECKBOX_LABELS.subscription_size);
-    if (!currentSizes) throw new Error("No package sizes found, check session storage");
-    const currentSizesIsArray = getType(currentSizes) === "array";
-    const sizes = currentSizesIsArray ? JSON.parse(currentSizes) : [
-        currentSizes
-    ];
-    // only keep first item, since range was removed (ex: 1:4-4 -> 4)
-    const formattedSizes = sizes.map((size)=>{
-        const [, value] = size.split(":");
-        return value.split("-")[0];
-    });
-    return [
-        ...new Set(formattedSizes)
-    ].sort((a, b)=>Number(a) - Number(b));
-};
+// const getDataSizeForDisplay = (): string[] => {
+//     const currentSizes = gv(CHECKBOX_LABELS.subscription_size);
+//     if (!currentSizes) throw new Error("No package sizes found, check session storage");
+//     const currentSizesIsArray = getType(currentSizes) === "array";
+//     const sizes = currentSizesIsArray ? JSON.parse(currentSizes) : [currentSizes];
+//     // only keep first item, since range was removed (ex: 1:4-4 -> 4)
+//     const formattedSizes: string[] = sizes.map((size: string) => {
+//         const [, value] = size.split(":");
+//         return value.split("-")[0];
+//     });
+//     return [...new Set(formattedSizes)].sort((a, b) => Number(a) - Number(b));
+// };
 const getType = (val)=>{
     try {
         const parsedValue = JSON.parse(val);
@@ -805,21 +805,19 @@ const show_filtered_and_sorted_operators = (operatorPrices)=>{
         $offer_card.find(".button-link").attr("href", item.link);
         console.log($offer_card.find(".button-link"));
         // $offer_card.find(".average-price_text").text(Math.round(item.total) + " nok per måned")
-        const dataSizes = getDataSizeForDisplay();
+        // const dataSizes = getDataSizeForDisplay();
         // console.log(dataSizes)
         const priceAndSizesWrapper = $offer_card.find(".price-data-size-wrapper");
-        dataSizes.forEach((size, i)=>{
+        item.pricesAndLinksPerSize.forEach((x, i)=>{
             if (i === 0) {
-                priceAndSizesWrapper.find(".data-size_text").html("<b>" + size + "</b> GB ");
-                priceAndSizesWrapper.find(".average-price_text").text(item.pricesAndLinksPerSize[size].price + " nok/mnd");
-                priceAndSizesWrapper.find(".continue_button").attr("href", item.pricesAndLinksPerSize[size].link);
-                priceAndSizesWrapper.find(".button-link").attr("href", item.pricesAndLinksPerSize[size].link);
+                priceAndSizesWrapper.find(".data-size_text").html("<b>" + x.size + "</b> GB ");
+                priceAndSizesWrapper.find(".average-price_text").text(x.price + " nok/mnd");
+                priceAndSizesWrapper.find(".button-link").attr("href", x.link);
             } else {
                 const $clone = priceAndSizesWrapper.clone();
-                $clone.find(".data-size_text").html("<b>" + size + "</b> GB ");
-                $clone.find(".average-price_text").text(item.pricesAndLinksPerSize[size].price + " nok/mnd");
-                $clone.find(".continue_button").attr("href", item.pricesAndLinksPerSize[size].link);
-                $clone.find(".button-link").attr("href", item.pricesAndLinksPerSize[size].link);
+                $clone.find(".data-size_text").html("<b>" + x.size + "</b> GB ");
+                $clone.find(".average-price_text").text(x.price + " nok/mnd");
+                $clone.find(".button-link").attr("href", x.link);
                 $offer_card.find(".button-services.w-button").before($clone);
             }
         });
@@ -1051,8 +1049,9 @@ $(function() {
     // if last page, show offers and filter buttons
     if ($body.hasClass("body-calc-step4")) {
         currentStep = 4;
-        const operatorPrices = JSON.parse(gv("operatorPrices"));
-        const preferences = JSON.parse(gv(CHECKBOX_LABELS["subscription-important_features"])).filter(Boolean); // the filter is to remove falsy values
+        const operatorPrices = JSON.parse(gv("operatorPrices") || "[]");
+        if (!operatorPrices.length) throw new Error("No operator prices found, check session storage");
+        const preferences = JSON.parse(gv(CHECKBOX_LABELS["subscription-important_features"]) || "[]").filter(Boolean); // the filter is to remove falsy values
         // prepare preferences points filter and data
         merge_preferences_points_with_operator_prices(operatorPrices, preferences);
         // on page load, update order and rating
@@ -1154,8 +1153,8 @@ $(function() {
             const rawPricesPerOperator = $(`[data-type='${SUBSCRIBER_TYPE[userType]}']`);
             if (!rawPricesPerOperator.length) throw new Error("No prices found for the selected user type, check data-type attribute & printed data from webflow in page 2");
             const sizes = getFormattedSizes(JSON.parse(gv(CHECKBOX_LABELS.subscription_size) || "[]"));
-            // console.log("Sizes for prices calculation", sizes);
-            // console.log("Raw prices per operator", rawPricesPerOperator);
+            console.log("Sizes for prices calculation", sizes);
+            console.log("Raw prices per operator", rawPricesPerOperator);
             rawPricesPerOperator.each(function(index, el) {
                 const $el = $(el);
                 const operatorName = $el.attr("id");
@@ -1173,8 +1172,11 @@ $(function() {
             });
             // sort by price
             operatorPrices.sort((a, b)=>a.total - b.total);
+            console.log("Operator prices", operatorPrices);
             // save to session storage
             sv("operatorPrices", JSON.stringify(operatorPrices));
+            // TODO: remove this after testing
+            // return;
             // navigate to next page
             setTimeout(()=>{
                 window.location.href = link || "#";
@@ -1399,6 +1401,36 @@ $(function() {
         }
     }
 });
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"j0dlC"}],"j0dlC":[function(require,module,exports) {
+exports.interopDefault = function(a) {
+    return a && a.__esModule ? a : {
+        default: a
+    };
+};
+exports.defineInteropFlag = function(a) {
+    Object.defineProperty(a, "__esModule", {
+        value: true
+    });
+};
+exports.exportAll = function(source, dest) {
+    Object.keys(source).forEach(function(key) {
+        if (key === "default" || key === "__esModule" || Object.prototype.hasOwnProperty.call(dest, key)) return;
+        Object.defineProperty(dest, key, {
+            enumerable: true,
+            get: function() {
+                return source[key];
+            }
+        });
+    });
+    return dest;
+};
+exports.export = function(dest, destName, get) {
+    Object.defineProperty(dest, destName, {
+        enumerable: true,
+        get: get
+    });
+};
 
 },{}]},["ezQqb","fJe33"], "fJe33", "parcelRequire3bc0")
 
