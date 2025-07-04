@@ -356,7 +356,7 @@ const reInitSliders = ($selector = ".js-range-slider") => {
             const s = $slider.ionRangeSlider({
                 values: [...Array.from({ length: max }, (_, i) => i), max, "Fri Data"],
                 prettify: function (value) {
-                    if (value === "Fri Data") return "Fri Data";
+                    if (value === "Fri Data" || parseInt(value) === 41) return "Fri Data";
                     return value + " GB";
                 },
                 onStart: function (data) {
