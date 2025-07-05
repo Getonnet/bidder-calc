@@ -261,13 +261,14 @@ const show_filtered_and_sorted_operators = (operatorPrices: TOperatorPrices[]) =
         const priceAndSizesWrapper = $offer_card.find(".price-data-size-wrapper");
 
         item.pricesAndLinksPerSize.forEach((x, i) => {
+            const size = x.size === "Fri Data" || parseInt(x.size) === 41 ? "Fri Data" : "<b>" + x.size + "</b> GB";
             if (i === 0) {
-                priceAndSizesWrapper.find(".data-size_text").html("<b>" + x.size + "</b> GB ");
+                priceAndSizesWrapper.find(".data-size_text").html(size);
                 priceAndSizesWrapper.find(".average-price_text").text(x.price + " nok/mnd");
                 priceAndSizesWrapper.find(".button-link").attr("href", x.link);
             } else {
                 const $clone = priceAndSizesWrapper.clone();
-                $clone.find(".data-size_text").html("<b>" + x.size + "</b> GB ");
+                $clone.find(".data-size_text").html(size);
                 $clone.find(".average-price_text").text(x.price + " nok/mnd");
                 $clone.find(".button-link").attr("href", x.link);
                 $offer_card.find(".button-services.w-button").before($clone);
